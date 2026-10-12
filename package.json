@@ -1,0 +1,41 @@
+{
+  "name": "sharepoint-fetch",
+  "version": "0.1.0",
+  "description": "Download SharePoint files with cookie authentication in Bun and Node.js",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "engines": { "bun": ">=1.4.2", "node": ">=22" },
+  "packageManager": "bun@1.4.2",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "typecheck": "bun node_modules/typescript/bin/tsc --noEmit",
+    "test": "bun test --timeout 15000",
+    "test:node": "node --import tsx --test test/*.test.ts",
+    "build": "bun scripts/build.mjs",
+    "verify:package": "bun scripts/verify-package.mjs",
+    "verify": "bun run typecheck && bun run test && bun run test:node && bun run build && bun run verify:package",
+    "example": "bun examples/download.ts",
+    "prepack": "bun run build"
+  },
+  "dependencies": { "tough-cookie": "^6.0.2" },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

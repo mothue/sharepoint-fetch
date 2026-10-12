@@ -1,0 +1,8 @@
+.DS_Store
+node_modules/
+dist/
+.build/
+*.tgz
+
+# Existing build output from the former Rust implementation
+target/
