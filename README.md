@@ -1,26 +1,26 @@
 # sharepoint-fetch
 
-SharePoint Online のファイルを Cookie 認証で取得する TypeScript ライブラリです。開発・テスト・サンプル実行は Bun を標準とし、Bun 1.4.2 以上と Node.js 22 以上で利用できます。ESM と CommonJS の両方で JavaScript と型定義を配布し、実行時依存は `tough-cookie` のみです。
+A TypeScript library for downloading SharePoint Online files with cookie authentication. Bun is the default tool for development, testing, and running the example. The library supports Bun 1.4.2 or later and Node.js 22 or later, with JavaScript and type declarations for both ESM and CommonJS. Its only direct runtime dependency is `tough-cookie`.
 
-## ローカルでビルド・インストール
+## Build and install locally
 
-このリポジトリから npm 互換の tarball を作成し、Bun または npm で利用側のプロジェクトにインストールできます。
+Create an npm-compatible tarball from this repository, then install it in your project with Bun or npm.
 
 ```sh
 bun install --frozen-lockfile
 bun run verify
 bun pm pack
-# 利用側プロジェクトで、作成した tarball のパスを指定
+# In your project, specify the path to the generated tarball
 bun add /path/to/sharepoint-fetch-0.1.0.tgz
-# Node.js のプロジェクトでは npm でもインストールできます
+# You can also use npm in a Node.js project
 npm install /path/to/sharepoint-fetch-0.1.0.tgz
 ```
 
-`bun pm pack` は `prepack` でビルドを実行します。配布物には `dist`、TypeScript ソース、README、既存の LICENSE が含まれます。依存関係は `bun.lock` で固定します。利用側が配布済みライブラリを Node.js で実行する際に Bun は不要です。
+`bun pm pack` runs the build through the `prepack` script. The package includes `dist`, TypeScript source files, this README, and the existing LICENSE. Development dependencies are locked in `bun.lock`. Bun is not required to run the installed library in Node.js.
 
-## URL から取得して保存
+## Download and save a file from a URL
 
-ブラウザのログイン済みセッションから取得した Cookie を渡します。認証方式は `FedAuth` と `rtFa` の組、または Cookie ヘッダー文字列です。値は対象ファイルへのアクセス権を持つ有効なものを指定してください。
+Provide cookies from an authenticated browser session. Authentication accepts either a `FedAuth` and `rtFa` pair or a Cookie header string. Use valid cookies from a session with permission to access the target file.
 
 ```typescript
 import { writeFile } from 'node:fs/promises';
@@ -28,10 +28,10 @@ import { buildClient, downloadFile, SharePointTarget, type AuthMaterial } from '
 
 async function main(): Promise<void> {
   const target = SharePointTarget.fromDocumentUrl(
-    'https://example.sharepoint.com/sites/demo/_layouts/15/Doc.aspx?sourcedoc={01234567-89AB-CDEF-0123-456789ABCDEF}&file=資料.xlsx',
+    'https://example.sharepoint.com/sites/demo/_layouts/15/Doc.aspx?sourcedoc={01234567-89AB-CDEF-0123-456789ABCDEF}&file=report.xlsx',
   );
   const auth: AuthMaterial = { kind: 'fedAuthRtFa', fedAuth: 'your-fedauth', rtFa: 'your-rtfa' };
-  // Cookie ヘッダー方式では、こちらを buildClient に渡します。
+  // For Cookie header authentication, pass this value to buildClient instead.
   const cookieAuth: AuthMaterial = { kind: 'cookieHeader', cookieHeader: 'FedAuth=your-fedauth; rtFa=your-rtfa' };
   const client = buildClient(auth, target.siteUrl);
   const response = await downloadFile(client, target);
@@ -45,11 +45,11 @@ async function main(): Promise<void> {
 main().catch(console.error);
 ```
 
-`fromDocumentUrl` は `sites`、`teams`、`personal`、SharePoint のルートサイトと、クエリやフラグメント内の入れ子の URL を解析します。GUID は大文字に正規化され、日本語の `file` 値をラベルとして保持します。ラベルはファイル名として安全化されていないため、保存先は利用側で指定してください。
+`fromDocumentUrl` parses `sites`, `teams`, `personal`, SharePoint root sites, and URLs nested in query parameters or fragments. GUIDs are normalized to uppercase, and Unicode characters in the `file` parameter are preserved in the label. Labels are not sanitized for use as filenames, so choose the output path in your application.
 
-`downloadFile` は本文を未消費の標準 `Response` として返します。401・403・404 などでも応答を返すため、保存前に `response.ok` を確認します。通信失敗・キャンセル・リダイレクト上限超過は Promise を reject します。
+`downloadFile` returns a standard `Response` with its body unread. HTTP errors such as 401, 403, and 404 also return a response; check `response.ok` before saving it. Network failures, cancellation, and exceeding the redirect limit reject the promise.
 
-## ターゲットを明示的に作成
+## Create a target explicitly
 
 ```typescript
 import { SharePointTarget } from 'sharepoint-fetch';
@@ -57,15 +57,15 @@ import { SharePointTarget } from 'sharepoint-fetch';
 const target = new SharePointTarget({
   siteUrl: 'https://example.sharepoint.com/sites/demo/',
   itemId: '{01234567-89ab-cdef-0123-456789abcdef}',
-  label: '資料.xlsx',
+  label: 'report.xlsx',
 });
 const renamed = target.withLabel('downloaded.xlsx');
 console.log(renamed.downloadUrl());
 ```
 
-`withLabel` は元のターゲットを変更せず新しいインスタンスを返します。`siteUrl` は絶対 HTTP/HTTPS URL、`itemId` は有効な GUID が必要です。`siteUrl` のクエリ・フラグメントと末尾のスラッシュは除去し、サイトのベース URL に正規化します。
+`withLabel` returns a new instance without modifying the original target. `siteUrl` must be an absolute HTTP or HTTPS URL, and `itemId` must be a valid GUID. Query parameters, fragments, and trailing slashes are removed from `siteUrl` to normalize it to the site's base URL.
 
-CommonJS の JavaScript では `const { SharePointTarget, buildClient, downloadFile } = require('sharepoint-fetch')` を利用できます。TypeScript の CommonJS 利用例です。
+In CommonJS JavaScript, use `const { SharePointTarget, buildClient, downloadFile } = require('sharepoint-fetch')`. Here is a CommonJS TypeScript example:
 
 ```typescript
 import sharepoint = require('sharepoint-fetch');
@@ -80,22 +80,22 @@ async function download(): Promise<Response> {
 }
 ```
 
-## 公開 API
+## Public API
 
-| API | 役割 |
+| API | Description |
 | --- | --- |
-| `AuthMaterial` | `{ kind: 'cookieHeader', cookieHeader }` または `{ kind: 'fedAuthRtFa', fedAuth, rtFa }` |
-| `SharePointTargetInit` | `siteUrl`、`itemId`、任意の `label`・`documentUrl` |
-| `SharePointTarget` | readonly の `siteUrl`、`itemId`、`label`、`documentUrl`。`fromDocumentUrl`、`withLabel`、`downloadUrl` |
-| `buildClient(auth, siteUrl, options?)` | 同期的な認証検証と `SharePointClient` の生成 |
-| `ClientOptions` | 任意の `fetch`、`userAgent`、`maxRedirects`（既定 20、0 以上の整数） |
-| `SharePointClient.get(url, options?)` | `string` または `URL` を GET し、`Promise<Response>` を返す |
-| `downloadFile(client, target, options?)` | REST URL から取得し、`Promise<Response>` を返す |
-| `DownloadOptions` | 任意の `signal: AbortSignal` |
+| `AuthMaterial` | `{ kind: 'cookieHeader', cookieHeader }` or `{ kind: 'fedAuthRtFa', fedAuth, rtFa }` |
+| `SharePointTargetInit` | `siteUrl`, `itemId`, and optional `label` and `documentUrl` |
+| `SharePointTarget` | Readonly `siteUrl`, `itemId`, `label`, and `documentUrl`; methods `fromDocumentUrl`, `withLabel`, and `downloadUrl` |
+| `buildClient(auth, siteUrl, options?)` | Validates authentication synchronously and creates a `SharePointClient` |
+| `ClientOptions` | Optional `fetch`, `userAgent`, and `maxRedirects` (a nonnegative integer, default: 20) |
+| `SharePointClient.get(url, options?)` | Sends a GET request to a `string` or `URL` and returns `Promise<Response>` |
+| `downloadFile(client, target, options?)` | Fetches the file's REST URL and returns `Promise<Response>` |
+| `DownloadOptions` | Optional `signal: AbortSignal` |
 
-既定 User-Agent は `sharepoint-fetch-bot` です。初期 Cookie は対象ホストに限定され、HTTPS の場合は Secure を付けます。応答の `Set-Cookie` を保持し、リダイレクトごとに domain・path・secure・expiry に従って送信 Cookie を選び直します。ライブラリの読み込みだけで通信・対話入力・ファイル保存は起きません。
+The default User-Agent is `sharepoint-fetch-bot`. Initial cookies are restricted to the target host and marked Secure for HTTPS. Response `Set-Cookie` headers update the cookie jar, and cookies are selected for each redirect according to their domain, path, secure flag, and expiry. Importing the library does not start network requests, prompt for input, or save files.
 
-## 開発と対話式サンプル
+## Development and interactive example
 
 ```sh
 bun install --frozen-lockfile
@@ -106,18 +106,18 @@ bun run build
 bun run verify:package
 bun run verify
 bun run example
-# 別バージョンの Node.js で既存テストと配布物を検証
+# Verify the tests and package with a different Node.js version
 /path/to/node --import tsx --test test/*.test.ts
 bun scripts/verify-package.mjs --node /path/to/node
 ```
 
-`bun run example` は TypeScript を直接実行し、URL、認証方式（1: Cookie ヘッダー、2: FedAuth/rtFa）、認証値を順に読み、成功した本文だけを現在のディレクトリへ保存します。端末で入力する認証値は表示しません。パイプ入力にも対応します。保存名から `/`、`\`、`:`、`*`、`?`、`"`、`<`、`>`、`|` と制御文字を除去し、空・`.`・`..` になる場合は GUID を使います。失敗時は非ゼロで終了し、HTTP ステータスまたはエラーメッセージを表示します。
+`bun run example` executes TypeScript directly and prompts for the URL, authentication method (1: Cookie header, 2: FedAuth/rtFa), and credentials in that order. It saves the body to the current directory only when the HTTP response is successful. Credentials entered in a terminal are hidden, and piped input is also supported. The output filename removes `/`, `\`, `:`, `*`, `?`, `"`, `<`, `>`, `|`, and control characters; if the result is empty, `.`, or `..`, it uses the GUID instead. On failure, the example exits with a nonzero status and displays the HTTP status or error message.
 
-`bun run verify` は型チェック、Bun と Node.js のテスト、両モジュール形式のビルド、配布検証をまとめて実行します。Node 互換検証には `node` と `npm` が必要です。`tsx` は Node 上で TypeScript のテスト・サンプルを実行するための開発依存で、Bun の実行や配布物には不要です。型チェック・型定義生成には TypeScript コンパイラを使います。
+`bun run verify` runs type checking, tests on Bun and Node.js, builds for both module formats, and package verification. Node compatibility checks require `node` and `npm`. The development dependency `tsx` runs TypeScript tests and the example on Node; it is not needed for Bun execution or the installed package. The TypeScript compiler handles type checking and declaration generation.
 
-サンプルの terminal テストには macOS/Linux の `script`・`stty`・`ps` コマンド、配布検証には `tar` を使用します。配布検証は Bun で tarball を作り、一時プロジェクトへ Bun と npm の両方で開発依存を除いてインストールします。それぞれの配布物について Bun と Node.js の ESM・CommonJS 実行、Bun の TypeScript 直接実行、NodeNext 型解決、README の TypeScript 例を確認します。
+Terminal tests for the example use the macOS/Linux commands `script`, `stty`, and `ps`; package verification also uses `tar`. Package verification creates a tarball with Bun and installs it into separate temporary projects with Bun and npm, excluding development dependencies. Each installation is checked for ESM and CommonJS execution on both Bun and Node.js, direct TypeScript execution on Bun, NodeNext type resolution, and the TypeScript examples in this README.
 
-## Rust 版からの移行
+## Migrating from the Rust version
 
 | Rust | TypeScript |
 | --- | --- |
@@ -128,6 +128,6 @@ bun scripts/verify-package.mjs --node /path/to/node
 | `site_url` / `item_id` / `document_url` | `siteUrl` / `itemId` / `documentUrl` |
 | `AuthMaterial::CookieHeader` | `{ kind: 'cookieHeader', cookieHeader }` |
 | `AuthMaterial::FedAuthRtFa` | `{ kind: 'fedAuthRtFa', fedAuth, rtFa }` |
-| 公開フィールドによるターゲット作成 | `new SharePointTarget(init)` |
+| Creating a target with public fields | `new SharePointTarget(init)` |
 
-Rust ソースと Cargo ファイルは TypeScript 実装へ置き換えました。ライセンスの条件は [LICENSE](LICENSE) を参照してください。
+The Rust source and Cargo files have been replaced with the TypeScript implementation. See [LICENSE](LICENSE) for the license terms.
