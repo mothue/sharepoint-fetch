@@ -16,7 +16,7 @@ bun add /path/to/sharepoint-fetch-0.1.0.tgz
 npm install /path/to/sharepoint-fetch-0.1.0.tgz
 ```
 
-`bun pm pack` runs the build through the `prepack` script. The package includes `dist`, TypeScript source files, this README, and the existing LICENSE. Development dependencies are locked in `bun.lock`. Bun is not required to run the installed library in Node.js.
+`bun pm pack` runs the build through the `prepack` script. The package includes `dist`, TypeScript source files, this README, and the LICENSE. Development dependencies are locked in `bun.lock`. Bun is not required to run the installed library in Node.js.
 
 ## Download and save a file from a URL
 
@@ -130,4 +130,4 @@ Terminal tests for the example use the macOS/Linux commands `script`, `stty`, an
 | `AuthMaterial::FedAuthRtFa` | `{ kind: 'fedAuthRtFa', fedAuth, rtFa }` |
 | Creating a target with public fields | `new SharePointTarget(init)` |
 
-The Rust source and Cargo files have been replaced with the TypeScript implementation. See [LICENSE](LICENSE) for the license terms.
+The Rust source and Cargo files have been replaced with the TypeScript implementation. Released under the [MIT License](LICENSE).

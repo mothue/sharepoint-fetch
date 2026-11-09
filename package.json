@@ -2,7 +2,7 @@
   "name": "sharepoint-fetch",
   "version": "0.1.0",
   "description": "Download SharePoint files with cookie authentication in Bun and Node.js",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MIT",
   "type": "module",
   "engines": { "bun": ">=1.4.2", "node": ">=22" },
   "packageManager": "bun@1.4.2",
